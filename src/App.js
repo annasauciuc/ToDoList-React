@@ -5,7 +5,7 @@ import ToDoItem from "./components/ToDoItem/ToDoItem";
 class ToDo extends Component {
   constructor(props) {
     super(props);
-    this.createNewToDoItem = this.createNewToDoItem.bind(this);
+    //  this.createNewToDoItem = this.createNewToDoItem.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleInput = this.handleInput.bind(this);
     this.toggleClass = this.toggleClass.bind(this);
@@ -13,16 +13,38 @@ class ToDo extends Component {
     this.state = {
       active: false,
       list: [],
-      todo: "",
- 
+      todo: ""
     };
   }
-  createNewToDoItem = () => {
-    this.setState(({ list, todo,id }) => ({
-      list: [...list, { todo ,id}],
-      todo: "",
-      active: false
-    }));
+
+  getToDos = () => {
+    const { todo } = this.state;
+    fetch("http://localhost:3000/tasks")
+      .then(response => response.json())
+      .then(data => {
+        console.log("data", data);
+        this.setState({ list: data });
+      })
+      .catch(error => console.log("error :", error));
+  };
+
+  componentDidMount = () => {
+    this.getToDos();
+  };
+
+  createNewItem = () => {
+    const { todo } = this.state;
+
+    fetch("http://localhost:3000/tasks", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      // mode: "no-cors",
+      body: JSON.stringify({ name: todo })
+    })
+      .then(response => this.getToDos())
+      .catch(error => console.log("error :", error));
   };
 
   handleKeyPress = e => {
@@ -43,16 +65,23 @@ class ToDo extends Component {
       active: !this.state.active
     });
   }
-
-  
-  deleteItem = indexToDelete => {
-    this.setState(({ list }) => ({
-      list: list.filter((toDo, index) => index !== indexToDelete)
-    }));
+  deleteItem = id => {
+    fetch(`http://localhost:3000/tasks/${id}`, {
+      method: "DELETE"
+    })
+      .then(response => response.json())
+      .then(response => this.getToDos());
   };
 
+  // deleteItem = indexToDelete => {
+
+  //   this.setState(({ list }) => ({
+  //     list: list.filter((toDo, index) => index !== indexToDelete)
+  //   }));
+  // };
+
   render() {
-    const { active, done ,id} = this.state;
+    const { active, done, id } = this.state;
     return (
       <React.Fragment>
         <div className="ToDo">
@@ -60,21 +89,22 @@ class ToDo extends Component {
             To-Do List{" "}
             <i
               className="ToDo-Add"
-              onClick={this.createNewToDoItem}
+              onClick={this.createNewItem}
               className="fa fa-plus"
             />
           </h1>
 
           {this.state.list.map((item, key) => {
+            //    console.log(item);
             return (
               <ToDoItem
                 active={active}
-                id={id}
+                id={item._id}
                 done={done}
                 toggleClass={this.toggleClass.bind(this, key)}
                 key={key}
-                item={item.todo}
-                deleteItem={this.deleteItem.bind(this, key)}
+                item={item.name}
+                deleteItem={() => this.deleteItem(item._id)}
               />
             );
           })}
@@ -85,7 +115,7 @@ class ToDo extends Component {
             placeholder="Add New Todo"
             type="text"
             value={this.state.todo}
-            onChange={this.handleInput}
+            onChange={e => this.handleInput(e)}
             onKeyPress={this.handleKeyPress}
           />
         </div>

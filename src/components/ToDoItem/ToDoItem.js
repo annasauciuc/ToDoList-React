@@ -8,19 +8,20 @@ class ToDoItem extends Component {
   }
 
   render() {
-    const {active, item, id} = this.props;
-
+    const { active, item,deleteLi, deleteItem, id } = this.props;
+    console.log('id :', id);
+  
     return (
       <React.Fragment>
         <div className="ToDoItem">
           <ul>
             <li
               id={id}
-              onClick={key => this.props.toggleClass(key)}
+            //  onClick={e => deleteLi(e)}
               className={active ? "done" : "undone"}
             >
               <span>
-                <i onClick={this.props.deleteItem} className="fa fa-trash" />
+                <i onClick={()=>deleteItem(id)} className="fa fa-trash" />
               </span>
               {item}
             </li>
